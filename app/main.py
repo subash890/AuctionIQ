@@ -12,7 +12,7 @@ from pathlib import Path
 
 from app import database, schemas, services
 
-app = FastAPI(title="BidMind AI Engine")
+app = FastAPI(title="AuctionIQ Engine")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

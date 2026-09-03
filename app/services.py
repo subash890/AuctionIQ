@@ -72,7 +72,7 @@ async def chat_with_ai(message: str, context: str = ""):
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(None, lambda: client.chat.completions.create(
             messages=[
-                {"role": "system", "content": "You are BidMind AI Assistant. Be helpful, concise, and friendly. Keep responses under 100 words."},
+                {"role": "system", "content": "You are AuctionIQ Assistant. Be helpful, concise, and friendly. Keep responses under 100 words."},
                 {"role": "user", "content": f"Context: {context}\n\nQuestion: {message}"}
             ],
             model="groq/compound-mini",
