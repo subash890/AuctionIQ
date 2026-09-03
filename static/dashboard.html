@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BidMind AI - Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- HEADER START -->
+    <header style="background: #0f3460; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0; font-size: 1.5rem;">🚀 BidMind AI</h1>
+        <nav style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="/dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.2);">📋 Dashboard</a>
+            <a href="/create" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">➕ Create</a>
+            <a href="/analytics" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📊 Analytics</a>
+            <a href="/chat" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">💬 Chat</a>
+            <a href="/bot" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">🤖 Bot</a>
+            <a href="/history" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📜 History</a>
+        <a href="/profile" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">👤 Profile</a>
+    </nav>
+        <div id="userSection"></div>
+    </header>
+    <!-- HEADER END -->
+
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2>📋 Active Auctions</h2>
+            <button class="btn-primary" onclick="loadAuctions()" style="width: auto;">🔄 Refresh</button>
+        </div>
+        
+        <div id="auctionList" class="grid grid-2">
+            <p>Loading auctions...</p>
+        </div>
+    </div>
+
+    <script>
+        // Auth check
+        const userStr = localStorage.getItem('bidmind_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        
+        if(!user || !user.logged_in) {
+            location.href = '/';
+        }
+        
+        // Show user info
+        document.getElementById('userSection').innerHTML = `
+            <span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px; margin-right: 0.5rem;">
+                👤 ${user.username}
+            </span>
+            <button onclick="logout()" style="background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
+                Logout
+            </button>
+        `;
+        
+        function logout() {
+            localStorage.removeItem('bidmind_user');
+            location.href = '/';
+        }
+        
+        async function loadAuctions() {
+            const container = document.getElementById('auctionList');
+            container.innerHTML = '<p style="text-align: center; padding: 2rem;">⏳ Loading...</p>';
+            
+            try {
+                const res = await fetch('/api/auctions?active_only=true');
+                const auctions = await res.json();
+                
+                if(auctions.length === 0) {
+                    container.innerHTML = `
+                        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                            <h3>📭 No Active Auctions</h3>
+                            <p style="color: #666; margin: 1rem 0;">Be the first to create one!</p>
+                            <button class="btn-primary" onclick="location.href='/create'" style="margin-top: 1rem; width: auto;">
+                                ➕ Create Auction
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = auctions.map(a => `
+    <div class="card auction-card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+            <h3>${escapeHtml(a.title)}</h3>
+            <span style="background: #6f42c1; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: bold;">
+                ID: ${a.id}
+            </span>
+        </div>
+                        <p style="color:#666; margin:0.5rem 0; font-size: 0.9rem;">
+                            ${escapeHtml((a.description || '').substring(0, 100))}${(a.description || '').length > 100 ? '...' : ''}
+                        </p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 1rem 0;">
+                            <div>
+                                <div style="font-size: 0.8rem; color: #666;">Current Bid</div>
+                                <div class="price">$${(a.current_bid || 0).toFixed(2)}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.8rem; color: #666;">AI Prediction</div>
+                                <div style="font-size: 1.2rem; color: #6f42c1; font-weight: bold;">
+                                    $${(a.ai_prediction || 0).toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-primary" onclick="location.href='/auction/${a.id}'">
+                            🎯 View & Bid
+                        </button>
+                    </div>
+                `).join('');
+                
+            } catch(err) {
+                container.innerHTML = `
+                    <div class="card" style="grid-column: 1 / -1; border-left: 4px solid #dc3545;">
+                        <h3 style="color: #dc3545;">❌ Failed to Load</h3>
+                        <p>Error: ${err.message}</p>
+                        <button class="btn-primary" onclick="loadAuctions()" style="margin-top: 1rem; width: auto;">
+                            🔄 Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        function escapeHtml(text) {
+            if(!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        loadAuctions();
+        setInterval(loadAuctions, 30000);
+    </script>
+</body>
+</html>

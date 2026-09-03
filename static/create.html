@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BidMind AI - Create Auction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- HEADER START -->
+    <header style="background: #0f3460; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0; font-size: 1.5rem;">🚀 BidMind AI</h1>
+        <nav style="display: flex; gap: 0.5rem;">
+            <a href="/dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📋 Dashboard</a>
+            <a href="/create" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.2);">➕ Create</a>
+            <a href="/analytics" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📊 Analytics</a>
+            <a href="/chat" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">💬 Chat</a>
+            <a href="/bot" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">🤖 Bot</a>
+            <a href="/history" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📜 History</a>
+        <a href="/profile" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">👤 Profile</a>
+        </nav>
+        <div id="userSection"></div>
+    </header>
+    <!-- HEADER END -->
+
+    <div class="container">
+        <div class="card" style="max-width: 700px; margin: 0 auto;">
+            <h2>➕ Create New Auction</h2>
+            
+            <form id="createForm" onsubmit="createAuction(event)">
+                <label>Item Title *</label>
+                <input type="text" id="title" placeholder="e.g., Vintage Camera 1970s" required>
+                
+                <label>Category</label>
+                <select id="category">
+                    <option value="">Select category...</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Art">Art & Collectibles</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Cars">Vehicles</option>
+                    <option value="Sports">Sports & Outdoors</option>
+                    <option value="Other">Other</option>
+                </select>
+                
+                <label>Description *</label>
+                <textarea id="description" rows="5" placeholder="Describe your item in detail..." required></textarea>
+                <small style="color: #666;">💡 AI will analyze for fraud risk</small>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Starting Price ($) *</label>
+                        <input type="number" id="startingPrice" placeholder="100.00" min="1" step="0.01" required>
+                    </div>
+                    <div>
+                        <label>Duration *</label>
+                        <select id="duration" required>
+                            <option value="1">1 hour</option>
+                            <option value="6">6 hours</option>
+                            <option value="24" selected>24 hours</option>
+                            <option value="72">3 days</option>
+                            <option value="168">7 days</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="aiAnalysis" class="ai-result hidden"></div>
+                <div id="message" class="alert hidden"></div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn-secondary" onclick="location.href='/dashboard'" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn-primary" id="submitBtn" style="flex: 1;">🚀 Launch Auction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const userStr = localStorage.getItem('bidmind_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if(!user) location.href = '/';
+        
+        document.getElementById('userSection').innerHTML = `
+            <span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px;">👤 ${user.username}</span>
+            <button onclick="logout()" style="background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin-left: 0.5rem;">Logout</button>
+        `;
+        
+        function logout() {
+            localStorage.removeItem('bidmind_user');
+            location.href = '/';
+        }
+
+        async function createAuction(e) {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                starting_price: parseFloat(document.getElementById('startingPrice').value),
+                duration_hours: parseInt(document.getElementById('duration').value),
+                category: document.getElementById('category').value || null
+            };
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = "⏳ AI Analyzing...";
+            
+            showMessage('message', 'AI is analyzing your listing...', 'info');
+            
+            try {
+                const res = await fetch('/api/auctions', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await res.json();
+                
+                if(res.ok) {
+                    const aiDiv = document.getElementById('aiAnalysis');
+                    aiDiv.innerHTML = `
+                        <h4>🤖 AI Analysis:</h4>
+                        <p><strong>Risk:</strong> ${data.ai_analysis?.risk_level || 'unknown'}</p>
+                        <p><strong>Summary:</strong> ${data.ai_analysis?.summary || 'N/A'}</p>
+                        <p><strong>Predicted Price:</strong> $${(data.ai_prediction || 0).toFixed(2)}</p>
+                    `;
+                    aiDiv.classList.remove('hidden');
+                    
+                    showMessage('message', `✅ Auction created! ID: ${data.id}`, 'success');
+                    setTimeout(() => location.href = `/auction/${data.id}`, 2500);
+                } else {
+                    showMessage('message', '❌ ' + (data.detail || 'Failed'), 'error');
+                }
+            } catch(err) {
+                showMessage('message', '❌ ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "🚀 Launch Auction";
+            }
+        }
+
+        function showMessage(elementId, msg, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = msg;
+            el.className = 'alert ' + type;
+            el.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

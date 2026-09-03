@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BidMind AI - My Profile</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- HEADER START -->
+    <header style="background: #0f3460; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0; font-size: 1.5rem;">🚀 BidMind AI</h1>
+        <nav style="display: flex; gap: 0.5rem;">
+            <a href="/dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📋 Dashboard</a>
+            <a href="/create" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">➕ Create</a>
+            <a href="/analytics" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📊 Analytics</a>
+            <a href="/chat" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">💬 Chat</a>
+            <a href="/bot" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">🤖 Bot</a>
+            <a href="/history" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📜 History</a>
+            <a href="/profile" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.2);">👤 Profile</a>
+        </nav>
+        <div id="userSection"></div>
+    </header>
+    <!-- HEADER END -->
+
+    <div class="container">
+        <!-- Profile Header -->
+        <div class="card profile-header" style="text-align: center; padding: 3rem;">
+            <div id="avatar" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; font-weight: bold; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);">
+                U
+            </div>
+            <h2 id="profileUsername" style="font-size: 2rem; margin-bottom: 0.5rem;">Loading...</h2>
+            <p id="memberSince" style="color: #718096; margin-bottom: 1rem;">Member since...</p>
+            <div id="badges" style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;"></div>
+        </div>
+
+        <div class="grid grid-2">
+            <!-- Profile Stats -->
+            <div class="card">
+                <h3>📊 Your Stats</h3>
+                <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                    <div class="stat-box" style="background: #f5f7fa; padding: 1.5rem; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #0f3460;" id="totalBids">0</div>
+                        <div style="color: #718096; font-size: 0.9rem;">Total Bids</div>
+                    </div>
+                    <div class="stat-box" style="background: #f5f7fa; padding: 1.5rem; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #28a745;" id="totalWon">0</div>
+                        <div style="color: #718096; font-size: 0.9rem;">Auctions Won</div>
+                    </div>
+                    <div class="stat-box" style="background: #f5f7fa; padding: 1.5rem; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #6f42c1;" id="totalSpent">$0</div>
+                        <div style="color: #718096; font-size: 0.9rem;">Total Spent</div>
+                    </div>
+                    <div class="stat-box" style="background: #f5f7fa; padding: 1.5rem; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #dc3545;" id="reputation">100</div>
+                        <div style="color: #718096; font-size: 0.9rem;">Reputation</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Profile -->
+            <div class="card">
+                <h3>⚙️ Edit Profile</h3>
+                <form id="profileForm" onsubmit="updateProfile(event)">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="Your username" required>
+                    <small style="color: #718096;">3-20 characters, letters and numbers only</small>
+                    
+                    <label>Bio</label>
+                    <textarea id="bio" rows="3" placeholder="Tell us about yourself..."></textarea>
+                    <small style="color: #718096;">Short description visible to other users</small>
+                    
+                    <label>Avatar Color</label>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <input type="color" id="avatarColor" value="#6f42c1" style="width: 60px; height: 40px; border: none; cursor: pointer;">
+                        <div style="display: flex; gap: 0.25rem;">
+                            <button type="button" onclick="setColor('#6f42c1')" style="width: 30px; height: 30px; background: #6f42c1; border: none; border-radius: 50%; cursor: pointer;"></button>
+                            <button type="button" onclick="setColor('#0f3460')" style="width: 30px; height: 30px; background: #0f3460; border: none; border-radius: 50%; cursor: pointer;"></button>
+                            <button type="button" onclick="setColor('#28a745')" style="width: 30px; height: 30px; background: #28a745; border: none; border-radius: 50%; cursor: pointer;"></button>
+                            <button type="button" onclick="setColor('#dc3545')" style="width: 30px; height: 30px; background: #dc3545; border: none; border-radius: 50%; cursor: pointer;"></button>
+                            <button type="button" onclick="setColor('#fd7e14')" style="width: 30px; height: 30px; background: #fd7e14; border: none; border-radius: 50%; cursor: pointer;"></button>
+                        </div>
+                    </div>
+                    
+                    <div id="profileMessage" class="alert hidden"></div>
+                    
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1.5rem;">💾 Save Changes</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+            <h3>🕐 Recent Activity</h3>
+            <div id="recentActivity" class="bid-log" style="height: auto; max-height: 300px;">
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userStr = localStorage.getItem('bidmind_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if(!user) location.href = '/';
+        
+        document.getElementById('userSection').innerHTML = `<span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px;">👤 ${user.username}</span>`;
+        
+        // Load profile data
+        async function loadProfile() {
+            try {
+                const res = await fetch(`/api/profile/${user.user_id}`);
+                const profile = await res.json();
+                
+                // Update header
+                document.getElementById('profileUsername').textContent = profile.username;
+                document.getElementById('memberSince').textContent = `Member since ${profile.member_since}`;
+                document.getElementById('avatar').textContent = profile.username.charAt(0).toUpperCase();
+                document.getElementById('avatar').style.background = `linear-gradient(135deg, ${profile.avatar_color} 0%, ${profile.avatar_color}dd 100%)`;
+                
+                // Update form
+                document.getElementById('username').value = profile.username;
+                document.getElementById('bio').value = profile.bio || '';
+                document.getElementById('avatarColor').value = profile.avatar_color;
+                
+                // Update stats
+                document.getElementById('totalBids').textContent = profile.total_bids;
+                document.getElementById('totalWon').textContent = profile.total_won;
+                document.getElementById('reputation').textContent = Math.round(profile.reputation_score);
+                
+                // Load detailed stats
+                const statsRes = await fetch(`/api/profile/${user.user_id}/stats`);
+                const stats = await statsRes.json();
+                document.getElementById('totalSpent').textContent = '$' + stats.total_spent.toFixed(2);
+                
+                // Load badges
+                const badgesDiv = document.getElementById('badges');
+                const badgeList = {
+                    'first_10_bids': {icon: '🎯', name: 'First 10 Bids', color: '#6f42c1'},
+                    'bid_master': {icon: '🏆', name: 'Bid Master', color: '#ffd700'},
+                    'winner_5': {icon: '', name: '5x Winner', color: '#28a745'}
+                };
+                
+                badgesDiv.innerHTML = profile.badges.length ? profile.badges.map(b => {
+                    const badge = badgeList[b] || {icon: '⭐', name: b, color: '#6f42c1'};
+                    return `<span style="background: ${badge.color}20; color: ${badge.color}; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem; border: 2px solid ${badge.color};"><span>${badge.icon}</span><span>${badge.name}</span></span>`;
+                }).join('') : '<p style="color: #718096;">No badges yet. Start bidding to earn some!</p>';
+                
+                // Load recent activity
+                const activityDiv = document.getElementById('recentActivity');
+                activityDiv.innerHTML = stats.recent_bids.length ? stats.recent_bids.map(b => `
+                    <div class="log-entry">
+                        <span>📦 Auction #${b.auction_id}</span>
+                        <span style="font-weight: bold; color: #0f3460;">$${b.amount.toFixed(2)}</span>
+                        <span style="color: #718096;">${new Date(b.timestamp).toLocaleString()}</span>
+                    </div>
+                `).join('') : '<p style="color: #718096;">No recent activity</p>';
+                
+            } catch(err) {
+                console.error('Profile load error:', err);
+                showMessage('profileMessage', 'Failed to load profile', 'error');
+            }
+        }
+        
+        async function updateProfile(e) {
+            e.preventDefault();
+            
+            const data = {
+                username: document.getElementById('username').value,
+                bio: document.getElementById('bio').value,
+                avatar_color: document.getElementById('avatarColor').value
+            };
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            
+            try {
+                const res = await fetch(`/api/profile/${user.user_id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await res.json();
+                
+                if(res.ok) {
+                    // Update localStorage
+                    const updatedUser = {
+                        ...user,
+                        username: result.username,
+                        balance: result.balance
+                    };
+                    localStorage.setItem('bidmind_user', JSON.stringify(updatedUser));
+                    
+                    showMessage('profileMessage', '✅ Profile updated successfully!', 'success');
+                    
+                    // Reload profile to show changes
+                    setTimeout(loadProfile, 1000);
+                } else {
+                    showMessage('profileMessage', '❌ ' + (result.detail || 'Failed to update'), 'error');
+                }
+            } catch(err) {
+                showMessage('profileMessage', '❌ Network error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '💾 Save Changes';
+            }
+        }
+        
+        function setColor(color) {
+            document.getElementById('avatarColor').value = color;
+        }
+        
+        function showMessage(elementId, msg, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = msg;
+            el.className = 'alert ' + type;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 4000);
+        }
+        
+        loadProfile();
+    </script>
+</body>
+</html>

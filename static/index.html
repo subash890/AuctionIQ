@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BidMind AI - Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header style="background: #0f3460; color: white; padding: 1rem 2rem;">
+        <h1 style="margin: 0; font-size: 1.5rem;">🚀 BidMind AI</h1>
+    </header>
+
+    <div class="container">
+        <div class="card auth-card">
+            <h2>🔐 Welcome Back</h2>
+            
+            <form id="loginForm">
+                <label>Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter username" required>
+                
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" required>
+                
+                <button type="submit" class="btn-primary">Login</button>
+            </form>
+            
+            <p style="text-align: center; margin: 1rem 0; color: #666;">— or —</p>
+            
+            <button class="btn-secondary" onclick="toggleRegister()">Create Account</button>
+            
+            <form id="registerForm" class="hidden">
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #ddd;">
+                
+                <label>Choose Username</label>
+                <input type="text" id="regUsername" placeholder="3-20 characters" required minlength="3">
+                
+                <label>Choose Password</label>
+                <input type="password" id="regPassword" placeholder="6+ characters" required minlength="6">
+                
+                <button type="submit" class="btn-primary">Register</button>
+            </form>
+            
+            <div id="message" class="alert hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleRegister() {
+            document.getElementById('registerForm').classList.toggle('hidden');
+        }
+
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            showMessage('Logging in...', 'info');
+            
+            try {
+                const res = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                
+                const data = await res.json();
+                
+                if(res.ok) {
+                    localStorage.setItem('bidmind_user', JSON.stringify({
+                        user_id: data.user_id,
+                        username: data.username,
+                        balance: data.balance,
+                        logged_in: true
+                    }));
+                    
+                    showMessage('✅ Success! Redirecting...', 'success');
+                    setTimeout(() => location.href = '/dashboard', 1000);
+                } else {
+                    showMessage('❌ ' + (data.detail || 'Login failed'), 'error');
+                }
+            } catch(err) {
+                showMessage('❌ Network error: ' + err.message, 'error');
+            }
+        };
+
+        document.getElementById('registerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            
+            showMessage('Creating account...', 'info');
+            
+            try {
+                const res = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                
+                const data = await res.json();
+                
+                if(res.ok) {
+                    showMessage('✅ Account created! Please login.', 'success');
+                    document.getElementById('loginUsername').value = username;
+                    document.getElementById('registerForm').classList.add('hidden');
+                } else {
+                    showMessage('❌ ' + (data.detail || 'Registration failed'), 'error');
+                }
+            } catch(err) {
+                showMessage('❌ Network error: ' + err.message, 'error');
+            }
+        };
+
+        function showMessage(msg, type) {
+            const el = document.getElementById('message');
+            el.textContent = msg;
+            el.className = 'alert ' + type;
+            el.classList.remove('hidden');
+            if(type === 'success') setTimeout(() => el.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>

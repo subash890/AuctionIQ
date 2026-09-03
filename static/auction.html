@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BidMind AI - Live Auction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- HEADER START -->
+    <header style="background: #0f3460; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0; font-size: 1.5rem;">🚀 BidMind AI</h1>
+        <nav style="display: flex; gap: 0.5rem;">
+            <a href="/dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📋 Dashboard</a>
+            <a href="/create" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">➕ Create</a>
+            <a href="/profile" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">👤 Profile</a>
+        </nav>
+        <div id="userSection"></div>
+    </header>
+    <!-- HEADER END -->
+
+    <div class="container">
+        <div class="card">
+            <h2 id="auctionTitle">Loading...</h2>
+            <div class="countdown" id="countdown">Connecting...</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 1rem 0;">
+                <div>
+                    <div style="font-size: 0.9rem; color: #666;">Current Bid</div>
+                    <div class="price" id="currentBid">$0.00</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.9rem; color: #666;">AI Prediction</div>
+                    <div style="font-size: 1.5rem; color: #6f42c1; font-weight: bold;" id="aiPrediction">$0.00</div>
+                </div>
+            </div>
+            <div id="connectionStatus" style="padding: 0.5rem; background: #ffc107; color: #000; border-radius: 4px; text-align: center;">
+                ⏳ Connecting...
+            </div>
+        </div>
+
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>💰 Place Your Bid</h3>
+                <input type="number" id="bidAmount" placeholder="Enter bid amount" min="0.01" step="0.01" style="width: 100%; padding: 0.75rem; margin: 1rem 0; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+                <button id="bidBtn" class="btn-primary" onclick="placeBid()" disabled>⏳ Connecting...</button>
+                <div style="margin-top: 1rem; padding: 1rem; background: #e3f2fd; border-radius: 6px;">
+                    <strong>Your Balance:</strong> $<span id="userBalance">1000.00</span>
+                </div>
+                <div id="bidStatus"></div>
+            </div>
+
+            <div class="card">
+                <h3>📡 Live Bid Feed</h3>
+                <div class="bid-log" id="bidLog">
+                    <div class="log-entry"><span>System</span><span>Connecting...</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const AUCTION_ID = {{AUCTION_ID}};
+        const userStr = localStorage.getItem('bidmind_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        
+        if(!user) {
+            alert('Please login first');
+            location.href = '/';
+        }
+        
+        document.getElementById('userSection').innerHTML = `<span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px;">👤 ${user.username}</span>`;
+        document.getElementById('userBalance').textContent = (user.balance || 1000).toFixed(2);
+        
+        // WebSocket variables - DECLARED AT TOP SCOPE
+        let ws = null;
+        let isConnected = false;
+        
+        function connectWebSocket() {
+            const wsUrl = `ws://${location.host}/ws/bid/${AUCTION_ID}`;
+            console.log('Connecting to:', wsUrl);
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('✅ WebSocket connected');
+                isConnected = true;
+                document.getElementById('connectionStatus').innerHTML = '✅ Connected';
+                document.getElementById('connectionStatus').style.background = '#28a745';
+                document.getElementById('connectionStatus').style.color = 'white';
+                
+                const bidBtn = document.getElementById('bidBtn');
+                bidBtn.disabled = false;
+                bidBtn.textContent = 'Place Bid';
+                
+                addLog('System', '✅ Connected', 'success');
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+            
+            ws.onclose = () => {
+                console.log('🔌 WebSocket disconnected');
+                isConnected = false;
+                document.getElementById('connectionStatus').innerHTML = '🔌 Reconnecting...';
+                document.getElementById('connectionStatus').style.background = '#ffc107';
+                document.getElementById('connectionStatus').style.color = '#000';
+                
+                const bidBtn = document.getElementById('bidBtn');
+                bidBtn.disabled = true;
+                bidBtn.textContent = 'Reconnecting...';
+                
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+        
+        function handleWebSocketMessage(data) {
+            if(data.type === 'init') {
+                document.getElementById('auctionTitle').textContent = data.auction.title;
+                document.getElementById('currentBid').textContent = '$' + parseFloat(data.auction.current_bid).toFixed(2);
+                document.getElementById('aiPrediction').textContent = '$' + parseFloat(data.auction.ai_prediction || 0).toFixed(2);
+                addLog('System', 'Auction loaded', 'success');
+            }
+            else if(data.type === 'bid_update') {
+                document.getElementById('currentBid').textContent = '$' + parseFloat(data.current_bid).toFixed(2);
+                document.getElementById('aiPrediction').textContent = '$' + parseFloat(data.ai_prediction || 0).toFixed(2);
+                
+                const isMyBid = data.user_id === user.user_id;
+                addLog('User ' + data.user_id, '$' + parseFloat(data.amount).toFixed(2) + (isMyBid ? ' (You)' : ''), isMyBid ? 'success' : '');
+            }
+            else if(data.status === 'rejected') {
+                showStatus(data.reason, 'error');
+            }
+        }
+        
+        function placeBid() {
+            // CRITICAL: Check WebSocket is ready
+            if(!isConnected || !ws || ws.readyState !== WebSocket.OPEN) {
+                showStatus('❌ Not connected. Please wait...', 'error');
+                return;
+            }
+            
+            const amount = parseFloat(document.getElementById('bidAmount').value);
+            const bidBtn = document.getElementById('bidBtn');
+            
+            if(!amount || amount <= 0) {
+                showStatus('❌ Enter valid amount', 'error');
+                return;
+            }
+            
+            const currentBid = parseFloat(document.getElementById('currentBid').textContent.replace('$', ''));
+            if(amount <= currentBid) {
+                showStatus('❌ Bid must be higher', 'error');
+                return;
+            }
+            
+            bidBtn.disabled = true;
+            bidBtn.textContent = 'Processing...';
+            
+            try {
+                ws.send(JSON.stringify({
+                    auction_id: AUCTION_ID,
+                    amount: amount,
+                    user_id: user.user_id
+                }));
+                showStatus('✅ Bid placed!', 'success');
+                document.getElementById('bidAmount').value = '';
+            } catch(err) {
+                showStatus('❌ Error: ' + err.message, 'error');
+            } finally {
+                bidBtn.disabled = false;
+                bidBtn.textContent = 'Place Bid';
+            }
+        }
+        
+        function addLog(user, msg, type) {
+            const log = document.getElementById('bidLog');
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            if(type === 'success') div.style.background = '#d4edda';
+            div.innerHTML = '<span><strong>' + user + '</strong></span><span>' + msg + '</span>';
+            log.insertBefore(div, log.firstChild);
+        }
+        
+        function showStatus(msg, type) {
+            const el = document.getElementById('bidStatus');
+            el.className = 'alert ' + type;
+            el.textContent = msg;
+            setTimeout(() => el.className = 'alert hidden', 4000);
+        }
+        
+        connectWebSocket();
+    </script>
+</body>
+</html>

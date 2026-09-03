@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BidMind AI - Auto-Bot</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- HEADER START -->
+    <header style="background: #0f3460; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0; font-size: 1.5rem;">🚀 BidMind AI</h1>
+        <nav style="display: flex; gap: 0.5rem;">
+            <a href="/dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📋 Dashboard</a>
+            <a href="/create" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">➕ Create</a>
+            <a href="/analytics" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📊 Analytics</a>
+            <a href="/chat" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">💬 Chat</a>
+            <a href="/bot" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.2);">🤖 Bot</a>
+            <a href="/history" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📜 History</a>
+        <a href="/profile" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">👤 Profile</a>
+        </nav>
+        <div id="userSection"></div>
+    </header>
+    <!-- HEADER END -->
+
+    <div class="container">
+        <h2>🤖 Auto-Bidding Bot</h2>
+        
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>➕ Create Bot</h3>
+                <form onsubmit="createBot(event)">
+                    <label>Auction ID</label>
+                    <input type="number" id="auctionId" required>
+                    <label>Max Bid ($)</label>
+                    <input type="number" id="maxBid" step="0.01" required>
+                    <label>Strategy</label>
+                    <select id="strategy">
+                        <option value="steady">Steady</option>
+                        <option value="aggressive">Aggressive</option>
+                        <option value="sniper">Sniper</option>
+                    </select>
+                    <button type="submit" class="btn-primary">🚀 Activate</button>
+                </form>
+                <div id="botMessage" class="alert hidden"></div>
+            </div>
+            
+            <div class="card">
+                <h3> Active Bots</h3>
+                <div id="botList"><p>Loading...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userStr = localStorage.getItem('bidmind_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if(!user) location.href = '/';
+        
+        document.getElementById('userSection').innerHTML = `<span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px;">👤 ${user.username}</span>`;
+        
+        async function createBot(e) {
+            e.preventDefault();
+            const config = {
+                user_id: user.user_id,
+                auction_id: parseInt(document.getElementById('auctionId').value),
+                max_bid: parseFloat(document.getElementById('maxBid').value),
+                strategy: document.getElementById('strategy').value
+            };
+            
+            try {
+                const res = await fetch('/api/bot/create', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(config)
+                });
+                const data = await res.json();
+                alert(data.message || JSON.stringify(data));
+                loadBots();
+            } catch(err) {
+                alert('Error: ' + err.message);
+            }
+        }
+        
+        async function loadBots() {
+            try {
+                const res = await fetch(`/api/bot/status/${user.user_id}`);
+                const data = await res.json();
+                const container = document.getElementById('botList');
+                container.innerHTML = data.bots.length ? data.bots.map(b => `
+                    <div class="log-entry">
+                        <span>Auction #${b.config.auction_id}</span>
+                        <span>${b.config.strategy}</span>
+                        <span>$${b.config.max_bid}</span>
+                    </div>
+                `).join('') : '<p>No active bots</p>';
+            } catch(err) {
+                console.error('Error:', err);
+            }
+        }
+        
+        loadBots();
+    </script>
+</body>
+</html>

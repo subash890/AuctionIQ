@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BidMind AI - Analytics</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- HEADER START -->
+    <header style="background: #0f3460; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0; font-size: 1.5rem;">🚀 BidMind AI</h1>
+        <nav style="display: flex; gap: 0.5rem;">
+            <a href="/dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📋 Dashboard</a>
+            <a href="/create" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">➕ Create</a>
+            <a href="/analytics" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.2);">📊 Analytics</a>
+            <a href="/chat" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">💬 Chat</a>
+            <a href="/bot" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">🤖 Bot</a>
+            <a href="/history" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">📜 History</a>
+        <a href="/profile" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(255,255,255,0.1);">👤 Profile</a>
+    </nav>
+        <div id="userSection"></div>
+    </header>
+    <!-- HEADER END -->
+
+    <div class="container">
+        <h2>📊 Analytics Dashboard</h2>
+        
+        <div class="grid grid-4">
+            <div class="card stat-card">
+                <h3>Total Auctions</h3>
+                <div class="stat-number" id="totalAuctions">-</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Active Now</h3>
+                <div class="stat-number" id="activeAuctions">-</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Total Bids</h3>
+                <div class="stat-number" id="totalBids">-</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Revenue</h3>
+                <div class="stat-number" id="totalRevenue">-</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>🕐 Recent Activity</h3>
+            <div id="recentActivity" class="bid-log" style="height: auto; max-height: 300px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const userStr = localStorage.getItem('bidmind_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if(!user) location.href = '/';
+        
+        document.getElementById('userSection').innerHTML = `<span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px;">👤 ${user.username}</span>`;
+        
+        async function loadAnalytics() {
+            try {
+                const res = await fetch('/api/analytics/dashboard');
+                const data = await res.json();
+                
+                document.getElementById('totalAuctions').textContent = data.overview.total_auctions;
+                document.getElementById('activeAuctions').textContent = data.overview.active_auctions;
+                document.getElementById('totalBids').textContent = data.overview.total_bids;
+                document.getElementById('totalRevenue').textContent = '$' + data.overview.total_revenue.toFixed(2);
+                
+                const activityDiv = document.getElementById('recentActivity');
+                activityDiv.innerHTML = data.recent_activity.length ? data.recent_activity.map(b => `
+                    <div class="log-entry">
+                        <span>User #${b.user_id}</span>
+                        <span>$${b.amount.toFixed(2)}</span>
+                        <span>${new Date(b.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                `).join('') : '<p>No recent activity</p>';
+                
+            } catch(err) {
+                console.error('Error:', err);
+            }
+        }
+        
+        loadAnalytics();
+    </script>
+</body>
+</html>
