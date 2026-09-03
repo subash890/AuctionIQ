@@ -1,4 +1,4 @@
-# 🚀 BidMind AI - Intelligent Real-Time Auction Platform
+# 🚀 AuctionIQ - Intelligent Real-Time Auction Platform
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)](https://fastapi.tiangolo.com)
@@ -10,7 +10,7 @@ A production-ready, AI-powered real-time auction platform with WebSocket bidding
 
 ## 🎯 Project Overview
 
-BidMind AI transforms traditional auctions into an intelligent, real-time bidding experience. Built for a **Web Dev/AI Intern** role, this project demonstrates full-stack development skills combined with practical AI/ML integration.
+AuctionIQ transforms traditional auctions into an intelligent, real-time bidding experience. Built for a **Web Dev/AI Intern** role, this project demonstrates full-stack development skills combined with practical AI/ML integration.
 
 **Live Demo:** [Coming Soon]  
 **Video Demo:** [Coming Soon]
