@@ -99,7 +99,7 @@
     </div>
 
     <script>
-        const userStr = localStorage.getItem('bidmind_user');
+        const userStr = localStorage.getItem('auctioniq_user');
         const user = userStr ? JSON.parse(userStr) : null;
         if(!user) location.href = '/';
         
@@ -190,7 +190,7 @@
                         username: result.username,
                         balance: result.balance
                     };
-                    localStorage.setItem('bidmind_user', JSON.stringify(updatedUser));
+                    localStorage.setItem('auctioniq_user', JSON.stringify(updatedUser));
                     
                     showMessage('profileMessage', '✅ Profile updated successfully!', 'success');
                     

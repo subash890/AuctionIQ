@@ -36,7 +36,7 @@
 
     <script>
         // Auth check
-        const userStr = localStorage.getItem('bidmind_user');
+        const userStr = localStorage.getItem('auctioniq_user');
         const user = userStr ? JSON.parse(userStr) : null;
         
         if(!user || !user.logged_in) {
@@ -54,7 +54,7 @@
         `;
         
         function logout() {
-            localStorage.removeItem('bidmind_user');
+            localStorage.removeItem('auctioniq_user');
             location.href = '/';
         }
         

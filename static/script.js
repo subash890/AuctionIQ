@@ -1,6 +1,6 @@
 // === AUTH UTILITIES ===
 function getCurrentUser() {
-    const user = localStorage.getItem('bidmind_user');
+    const user = localStorage.getItem('auctioniq_user');
     return user ? JSON.parse(user) : null;
 }
 
@@ -14,7 +14,7 @@ function requireAuth() {
 }
 
 function logout() {
-    localStorage.removeItem('bidmind_user');
+    localStorage.removeItem('auctioniq_user');
     location.href = '/';
 }
 
