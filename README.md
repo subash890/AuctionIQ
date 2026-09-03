@@ -138,8 +138,8 @@ Place your trained models in the `/models` folder:
 ### Step 6: Initialize Database
 ```bash
 # Delete old database (if exists)
-Remove-Item bidmind.db  # Windows
-rm bidmind.db           # Mac/Linux
+Remove-Item auctioniq.db  # Windows
+rm auctioniq.db           # Mac/Linux
 
 # Start server (database auto-creates)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
