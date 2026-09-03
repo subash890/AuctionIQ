@@ -99,8 +99,8 @@ AuctionIQ transforms traditional auctions into an intelligent, real-time bidding
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/yourusername/bidmind-ai.git
-cd bidmind-ai
+git clone https://github.com/yourusername/AuctionIQ.git
+cd AuctionIQ
 ```
 
 ### Step 2: Create Virtual Environment
@@ -193,7 +193,7 @@ http://localhost:8000
 ## 📁 Project Structure
 
 ```
-bidmind-ai/
+AuctionIQ/
 │
 ├── app/
 │   ├── __init__.py
